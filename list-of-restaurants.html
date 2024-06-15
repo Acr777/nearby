@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nearby Restaurants</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Set the size of the map */
+        #map {
+            height: 300px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        /* Center the nearby restaurants */
+        #restaurant-list {
+            text-align: center;
+        }
+
+        /* Style for the restaurant list */
+        .restaurant-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            overflow: hidden; /* Ensure photos don't overflow */
+            background-color: #f9f9f9;
+        }
+
+        /* Style for restaurant name */
+        .restaurant-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* Style for restaurant address */
+        .restaurant-address {
+            margin-top: 5px;
+            color: #666;
+        }
+
+        /* Style for restaurant photo */
+        .restaurant-photo {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 10px;
+            float: left;
+        }
+
+        /* Style for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Nearby Restaurants</h1>
+    <!-- Map container -->
+    <div id="map"></div>
+
+    <!-- Restaurant list -->
+    <ul id="restaurant-list"></ul>
+
+    <!-- Load the Google Maps JavaScript API and Places library -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwjNkVZ0mr30RDn-X84NCq7QbfHvUCxMI&libraries=places&callback=initMap" async defer></script>
+
+    <script>
+        // Initialize and display the map
+        function initMap() {
+            // Try HTML5 geolocation.
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    var map = new google.maps.Map(document.getElementById('map'), {
+                        center: userLocation, // Center the map on the user's current location
+                        zoom: 15 // Set the initial zoom level
+                    });
+
+                    var service = new google.maps.places.PlacesService(map);
+
+                    var request = {
+                        location: userLocation, // Search around the user's current location
+                        radius: '500', // Search within 500 meters
+                        type: ['restaurant'] // Search for restaurants
+                    };
+
+                    service.nearbySearch(request, callback);
+
+                    function callback(results, status) {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            var restaurantList = document.getElementById('restaurant-list');
+
+                            for (var i = 0; i < results.length; i++) {
+                                createMarker(results[i]);
+
+                                // Add restaurant details to the list
+                                var listItem = document.createElement('li');
+                                listItem.className = 'restaurant-item';
+                                var restaurantName = document.createElement('div');
+                                restaurantName.className = 'restaurant-name';
+                                restaurantName.textContent = results[i].name;
+                                var restaurantAddress = document.createElement('div');
+                                restaurantAddress.className = 'restaurant-address';
+                                restaurantAddress.textContent = results[i].vicinity;
+                                var restaurantPhoto = document.createElement('img');
+                                restaurantPhoto.className = 'restaurant-photo';
+                                restaurantPhoto.src = results[i].photos ? results[i].photos[0].getUrl({maxWidth: 100, maxHeight: 100}) : 'no-photo.jpg';
+                                listItem.appendChild(restaurantPhoto);
+                                listItem.appendChild(restaurantName);
+                                listItem.appendChild(restaurantAddress);
+                                restaurantList.appendChild(listItem);
+                            }
+                        }
+                    }
+
+                    function createMarker(place) {
+                        var marker = new google.maps.Marker({
+                            map: map,
+                            position: place.geometry.location,
+                            title: place.name
+                        });
+                    }
+                }, function() {
+                    handleLocationError(true);
+                });
+            } else {
+                // Browser doesn't support Geolocation
+                handleLocationError(false);
+            }
+        }
+
+        function handleLocationError(browserHasGeolocation) {
+            var errorMsg = browserHasGeolocation ? 'The Geolocation service failed.' : 'Your browser doesn\'t support geolocation.';
+            alert(errorMsg);
+        }
+    </script>
+</body>
+</html>
